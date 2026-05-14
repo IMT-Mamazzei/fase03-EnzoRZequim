@@ -5,13 +5,17 @@ import java_cup.runtime.*;
 parser code {:
     // Método chamado pelo CUP quando encontra um erro sintático
     public void syntax_error(Symbol cur_token) {
-        throw new RuntimeException("Erro Sintático na linha " + cur_token.left + ", coluna " + cur_token.right);
+        throw new RuntimeException(
+            "Erro Sintático na linha " +
+            cur_token.left +
+            ", coluna " +
+            cur_token.right
+        );
     }
 :}
 
 /* ========================================================================= */
-/* DECLARAÇÃO DOS TOKENS (TERMINAIS)                                         */
-/* O CUP usará isso para gerar o sym.java que o seu Lexer precisa            */
+/* TERMINAIS                                                                 */
 /* ========================================================================= */
 
 terminal IF, THEN, ELSE, WHILE;
@@ -20,42 +24,95 @@ terminal String ID, NUMBER;
 terminal String ADD_OP, MUL_OP, REL_OP;
 
 /* ========================================================================= */
-/* DECLARAÇÃO DOS NÃO-TERMINAIS (VARIÁVEIS DA GRAMÁTICA)                     */
+/* NÃO TERMINAIS                                                             */
 /* ========================================================================= */
 
 non terminal program, stmt_list, stmt;
 non terminal assign_stmt, if_stmt, while_stmt, block_stmt, null_stmt;
-non terminal expr;
+
+non terminal expr, rel_expr, add_expr, mul_expr, factor;
 
 /* ========================================================================= */
-/* PRECEDÊNCIA E ASSOCIATIVIDADE                                             */
-/* ========================================================================= */
-
-/* TODO 1: Declare a precedência para resolver a ambiguidade matemática. */
-/* Dica: O operador mais embaixo tem a MAIOR precedência!                */
-/* precedence left ... ; */
-
-/* ========================================================================= */
-/* REGRAS DA GRAMÁTICA                                                       */
+/* GRAMÁTICA                                                                 */
 /* ========================================================================= */
 
 start with program;
 
-/* TODO 2: Como definir um programa que é uma lista de comandos? */
-program ::= /* Escreva a regra aqui */ ;
+/* ========================================================================= */
+/* PROGRAMA                                                                  */
+/* ========================================================================= */
 
-/* TODO 3: Como definir uma lista recursiva no BNF? */
-stmt_list ::= /* Escreva a regra aqui */ ;
+program ::= stmt_list ;
 
-/* TODO 4: Declaração dos comandos (assign, if, while, block, null) */
-stmt ::= /* Escreva a regra aqui */ ;
+/* ========================================================================= */
+/* LISTA DE COMANDOS                                                         */
+/* ========================================================================= */
+
+stmt_list ::= stmt_list stmt
+            |
+            ;
+/* ========================================================================= */
+/* COMANDOS                                                                  */
+/* ========================================================================= */
+
+stmt ::= assign_stmt
+       | if_stmt
+       | while_stmt
+       | block_stmt
+       | null_stmt
+       ;
+
+/* ========================================================================= */
+/* ATRIBUIÇÃO                                                                */
+/* ========================================================================= */
 
 assign_stmt ::= ID ASSIGN expr SEMI ;
 
-/* TODO 5: Implemente o IF, WHILE, BLOCO e NULL */
-/* if_stmt ::= ... */
+/* ========================================================================= */
+/* IF                                                                        */
+/* ========================================================================= */
 
-/* TODO 6: Regras de expressões (aritmética, relacional, etc) */
-expr ::= expr ADD_OP expr
-       /* Adicione MUL_OP, REL_OP, parenteses, NUMBER e ID */
-       ;
+if_stmt ::= IF LPAREN expr RPAREN THEN block_stmt
+          | IF LPAREN expr RPAREN THEN block_stmt ELSE block_stmt
+          ;
+
+/* ========================================================================= */
+/* WHILE                                                                     */
+/* ========================================================================= */
+
+while_stmt ::= WHILE LPAREN expr RPAREN block_stmt ;
+
+/* ========================================================================= */
+/* BLOCO                                                                     */
+/* ========================================================================= */
+
+block_stmt ::= LBRACE stmt_list RBRACE ;
+
+/* ========================================================================= */
+/* COMANDO NULO                                                              */
+/* ========================================================================= */
+
+null_stmt ::= SEMI ;
+
+/* ========================================================================= */
+/* EXPRESSÕES                                                                */
+/* ========================================================================= */
+
+expr ::= rel_expr ;
+
+rel_expr ::= rel_expr REL_OP add_expr
+           | add_expr
+           ;
+
+add_expr ::= add_expr ADD_OP mul_expr
+           | mul_expr
+           ;
+
+mul_expr ::= mul_expr MUL_OP factor
+           | factor
+           ;
+
+factor ::= LPAREN expr RPAREN
+         | NUMBER
+         | ID
+         ;
